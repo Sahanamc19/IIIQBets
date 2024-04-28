@@ -4,10 +4,11 @@ import PropTypes from 'prop-types';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Popover from '@mui/material/Popover';
+import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
-import MenuItem from '@mui/material/MenuItem';
 import TableCell from '@mui/material/TableCell';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 
@@ -17,16 +18,27 @@ import Iconify from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export default function UserTableRow({
+  id,
   selected,
-  name,
+  name: initialName,
   avatarUrl,
-  company,
-  role,
-  isVerified,
+  company: initialCompany,
+  role: initialRole,
+  isVerified: initialIsVerified,
   status,
   handleClick,
+  handleDelete,
 }) {
   const [open, setOpen] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(initialName);
+  const [company, setCompany] = useState(initialCompany);
+  const [role, setRole] = useState(initialRole);
+  const [isVerified, setIsVerified] = useState(initialIsVerified);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -35,6 +47,32 @@ export default function UserTableRow({
   const handleCloseMenu = () => {
     setOpen(null);
   };
+
+  const handleSave = () => {
+    setIsEditing(false);
+    setOpen(false);
+  };
+
+  const handleCancel = () => {
+    setName(initialName);
+    setCompany(initialCompany);
+    setRole(initialRole);
+    setIsVerified(initialIsVerified);
+    setIsEditing(false);
+  };
+  const handleDeleteUser = () => {
+    handleDelete(id);
+    window.alert('Are you sure you want to delete this data?');
+  };
+
+  let displayContent;
+  if (isEditing) {
+    displayContent = (
+      <TextField value={isVerified} onChange={(e) => setIsVerified(e.target.value)} />
+    );
+  } else {
+    displayContent = isVerified ? 'Yes' : 'No';
+  }
 
   return (
     <>
@@ -46,18 +84,29 @@ export default function UserTableRow({
         <TableCell component="th" scope="row" padding="none">
           <Stack direction="row" alignItems="center" spacing={2}>
             <Avatar alt={name} src={avatarUrl} />
-            <Typography variant="subtitle2" noWrap>
-              {name}
-            </Typography>
+            {isEditing ? (
+              <TextField value={name} onChange={(e) => setName(e.target.value)} />
+            ) : (
+              <Typography variant="subtitle2" noWrap>
+                {name}
+              </Typography>
+            )}
           </Stack>
         </TableCell>
 
-        <TableCell>{company}</TableCell>
+        <TableCell>
+          {isEditing ? (
+            <TextField value={company} onChange={(e) => setCompany(e.target.value)} />
+          ) : (
+            company
+          )}
+        </TableCell>
 
-        <TableCell>{role}</TableCell>
+        <TableCell>
+          {isEditing ? <TextField value={role} onChange={(e) => setRole(e.target.value)} /> : role}
+        </TableCell>
 
-        <TableCell align="center">{isVerified ? 'Yes' : 'No'}</TableCell>
-
+        <TableCell align="center">{displayContent}</TableCell>
         <TableCell>
           <Label color={(status === 'banned' && 'error') || 'success'}>{status}</Label>
         </TableCell>
@@ -68,7 +117,6 @@ export default function UserTableRow({
           </IconButton>
         </TableCell>
       </TableRow>
-
       <Popover
         open={!!open}
         anchorEl={open}
@@ -79,15 +127,30 @@ export default function UserTableRow({
           sx: { width: 140 },
         }}
       >
-        <MenuItem onClick={handleCloseMenu}>
-          <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
-          Edit
-        </MenuItem>
+        {isEditing ? (
+          <>
+            <MenuItem onClick={handleSave}>
+              <Iconify icon="eva:save-fill" sx={{ mr: 2 }} />
+              Save
+            </MenuItem>
 
-        <MenuItem onClick={handleCloseMenu} sx={{ color: 'error.main' }}>
-          <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Delete
-        </MenuItem>
+            <MenuItem onClick={handleCancel} sx={{ color: 'error.main' }}>
+              Cancel
+            </MenuItem>
+          </>
+        ) : (
+          <>
+            <MenuItem onClick={handleEdit}>
+              <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
+              Edit
+            </MenuItem>
+
+            <MenuItem onClick={handleDeleteUser} sx={{ color: 'error.main' }}>
+              <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
+              Delete
+            </MenuItem>
+          </>
+        )}
       </Popover>
     </>
   );
@@ -102,4 +165,6 @@ UserTableRow.propTypes = {
   role: PropTypes.any,
   selected: PropTypes.any,
   status: PropTypes.string,
+  handleDelete: PropTypes.func,
+  id: PropTypes.string,
 };
